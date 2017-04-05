@@ -1,0 +1,27 @@
+Assignment name: Assignment 2
+TCSS 305: Programming Practicum, Autumn 2015
+
+Name: Sophie Nop
+UWNetID: snop
+Subversion Revision Number: 11
+
+Assignment Overview:
+The purpose of assignment 2 is to learn about code decoupling and building the backend for an existing GUI. Most importantly, we learned to implement code from specifications so that our code can be used with any GUI with the same spec. We also built on unit testing knowledge by writing tests for the Item class. 
+
+Technical Impression:
+Using the specifications I built functions for the Item, ItemOrder, and ShoppingCart classes. I tested these functionalities in the Item class: single item price, bulk item price, and identical bulk item. As well as, the equals and hashCode for the items class. There was no need to test IllegalArgumentExceptions and NullPointerExceptions because it was handled in our Item class.
+
+In my program, I did not create any new functions because it was not necessary to create getters or setters to access the fields. By making private global fields I was able to access them throughout my class.
+
+New things to take away from this assignment for me are BigDecimal calculations, Map, StringBuilder, and NumberFormat. 
+
+BigDecimal computation is interesting because it has Add, Subtract, Multiply, and Divide operations that can be rounded with RoundingMode using the dot notations. When it came to Maps the pdf that was provided was very helpful to learn about Keys and Values. Learning how to append and call toString on StringBuilder was also beneficial and I think will help me in the future. NumberFormat was another new concept to me. I thought it was interesting that we only instantiate it once and it makes complete sense to do so because we live in the United States and we do not need to change the currency. 
+
+This was a particularly difficult assignment for me because of the new concepts, but I think with practice it will get easier. 
+
+Unresolved problems in my submission:
+None that I know about.
+
+Questions:
+None.
+
