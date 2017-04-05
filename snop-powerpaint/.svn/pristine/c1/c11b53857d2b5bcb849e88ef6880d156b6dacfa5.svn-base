@@ -1,0 +1,42 @@
+package tools;
+
+import java.awt.event.KeyEvent;
+
+import javax.swing.ImageIcon;
+
+import shapes.DrawableShape;
+import shapes.Line;
+
+/**
+ * A line tool.
+ * @author Sophie
+ * @version 1
+ */
+public class LineTool extends AbstractPowerPaintTool {
+
+    /**
+     * The ImageIcon for the Pencil tool.
+     */
+    private static final ImageIcon LINE_ICON = new ImageIcon("./images/line_bw.gif");
+    
+    @Override
+    public DrawableShape update(final int theNewX, final int theNewY) {
+        return new Line(myStartX, myStartY, theNewX, theNewY, myColor, myStroke);
+    }
+
+    @Override
+    public String getName() {
+        return "Line";
+    }
+
+    @Override
+    public int getAccelerator() {
+        return KeyEvent.VK_L;
+    }
+
+    @Override
+    public ImageIcon getIconFileName() {
+        return LINE_ICON;
+    }
+
+}

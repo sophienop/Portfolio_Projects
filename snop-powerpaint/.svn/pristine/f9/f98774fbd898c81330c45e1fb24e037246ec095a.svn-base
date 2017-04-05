@@ -1,0 +1,439 @@
+/*
+ * Assignment 5 TCSS 305 - Programming Practicum
+ */
+
+package gui;
+
+
+import tools.EllipseTool;
+import tools.LineTool;
+import tools.PencilTool;
+import tools.PowerPaintTool;
+import tools.RectangleTool;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JColorChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+
+/**
+ * Class that builds the GUI and has some action implemented.
+ * 
+ * @author Sophie Nop
+ * @version 5 November 2015
+ */
+public class PowerPaintGUI implements PowerPaintReceiver {
+
+    /**
+     * default value of height. 
+     */
+    private static final int MY_HEIGHT = 200;
+
+    /**
+     * default value of width.
+     */
+    private static final int MY_WIDTH = 400;
+
+    /**
+     * The size of the thickness adjustment (max value).
+     */
+    private static final int THICKNESS_MAX = 20;
+
+    /**
+     * The spacing of ticks on the thickness adjustment.
+     */
+    private static final int TICK_SPACING = 5;
+
+    /**
+     * The starting thickness.
+     */
+    private static final int INITIAL_THICKNESS = 1;
+
+    /**
+     * The starting color.
+     */
+    private static final Color INITIAL_COLOR = Color.BLACK;
+
+    /**
+     * The width and height of the dynamic color icon.
+     */
+    private static final int ICON_SIZE = 19;
+
+    /**
+     * The list of tools we will use.
+     */
+    private final List<Action> myToolActions;
+
+    /**
+     * Displays the window.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * JMenuBar to hold the Menu items.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * The JMenuItem for clearing all items.
+     */
+    private JMenuItem myClearMenuItem;
+
+    /**
+     * The JMenuItem for undoing one action.
+     */
+    private JMenuItem myUndoMenuItem;
+
+    /**
+     * The JMenuItem for redoing one undone action.
+     */
+    private JMenuItem myRedoMenuItem;
+
+    /**
+     * Holds the JPanel.
+     */
+    private final PowerPaintDrawingPanel myDrawingPanel;
+
+
+    /**
+     * Constructor that creates the objects.
+     */
+    public PowerPaintGUI() {
+        myJFrame = new JFrame();
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/paintIcon.png"));
+        myDrawingPanel = new PowerPaintDrawingPanel(INITIAL_THICKNESS, INITIAL_COLOR);
+        myDrawingPanel.addReceiver(this);
+        myDrawingPanel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+        myMenuBar = new JMenuBar();
+
+        myToolActions = new ArrayList<Action>();
+        setupTools();
+    }
+
+    /**
+     * Set up the tools we'll use to draw with (helper for the constructor).
+     */
+    private void setupTools() {
+        final PowerPaintTool[] tools = { 
+            new PencilTool(),
+            new LineTool(), 
+            new RectangleTool(), 
+            new EllipseTool() };
+        for (final PowerPaintTool ppt : tools) {
+            final Action toolAction = new AbstractAction(ppt.getName(),
+                                                         ppt.getIconFileName()) {
+                /**
+                 * Generated.
+                 */
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void actionPerformed(final ActionEvent theEvent) {
+                    myDrawingPanel.setMyTool(ppt);
+                }
+            };
+            toolAction.putValue(Action.MNEMONIC_KEY, ppt.getAccelerator());
+            myToolActions.add(toolAction);
+        }
+    }
+
+    /**
+     * method that runs the program within main.
+     */
+    public void start() {
+        createFrame();
+    }
+
+    /**
+     * creatFrame creates the application.
+     * 
+     * @return the Window application.
+     */
+    public JFrame createFrame() {
+        // Set up items in window
+        myJFrame.setTitle("PowerPaint");
+        myJFrame.setLayout(new BorderLayout());
+        myJFrame.add(myDrawingPanel).setBackground(Color.WHITE);
+        myJFrame.setJMenuBar(buildMenuBar());
+        myJFrame.add(buildToolBar(), BorderLayout.SOUTH);
+
+        // Set up window size and location
+        myJFrame.setPreferredSize(new Dimension(MY_WIDTH, MY_HEIGHT));
+        myJFrame.pack();
+        //Centers the GUI - have to pack it first before this call!
+        myJFrame.setLocationRelativeTo(myJFrame);
+        myJFrame.setVisible(true);
+        myJFrame.setResizable(true);
+        myJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        return myJFrame;
+    }
+
+    /**
+     * When our PowerPaintDrawingPanel updates, this lets it tell us
+     * that it has new information.
+     * @see gui.PowerPaintReceiver#receivePowerPaintNotification()
+     */
+    public void receivePowerPaintNotification() {
+        myUndoMenuItem.setEnabled(myDrawingPanel.canUndo());
+        myRedoMenuItem.setEnabled(myDrawingPanel.canRedo());
+        myClearMenuItem.setEnabled(myDrawingPanel.canUndo());
+    }
+
+    // Menu Bar: File Options Tools Help
+    /**
+     * Creates the menu bar.
+     * 
+     * @return a menu.
+     */
+    private JMenuBar buildMenuBar() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildToolMenus());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+    }
+
+    /**
+     * @return the file menu.
+     */
+    private JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+
+        myUndoMenuItem = new JMenuItem("Undo one change");
+        myUndoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+                                                             InputEvent.CTRL_DOWN_MASK));
+        myUndoMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myDrawingPanel.canUndo()) {
+                    myDrawingPanel.undo();
+                }
+            }
+        });
+        myUndoMenuItem.setEnabled(false);
+
+        myRedoMenuItem = new JMenuItem("Redo undone change");
+        myRedoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y,
+                                                             InputEvent.CTRL_DOWN_MASK));
+        myRedoMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myDrawingPanel.canRedo()) {
+                    myDrawingPanel.redo();
+                }
+            }
+        });
+        myRedoMenuItem.setEnabled(false);
+
+        myClearMenuItem = new JMenuItem("Undo all changes");
+        myClearMenuItem.setMnemonic(KeyEvent.VK_U);
+        myClearMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myDrawingPanel.canUndo()) {
+                    myDrawingPanel.clearMyDrawings();
+                }
+            }
+        });
+        myClearMenuItem.setEnabled(false);
+
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.setMnemonic(KeyEvent.VK_X);
+        exitItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                myJFrame.dispose();
+            }
+        });
+
+        fileMenu.add(myUndoMenuItem);
+        fileMenu.add(myRedoMenuItem);
+        fileMenu.add(myClearMenuItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+        return fileMenu;
+    }
+
+    /**
+     * @return the option menu.
+     */
+    private JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Options");
+        optionMenu.setMnemonic(KeyEvent.VK_O);
+
+        final JCheckBoxMenuItem grid = new JCheckBoxMenuItem("Grid");
+        grid.setMnemonic(KeyEvent.VK_G);
+        grid.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                myDrawingPanel.setGridEnabled(grid.isSelected());
+            }
+
+        });
+        final JMenu thickness = new JMenu("Thickness");
+        thickness.setMnemonic(KeyEvent.VK_T);
+        final JMenuItem color = new JMenuItem("Color...", new ImageIcon());
+
+        color.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+
+                final Color colorUserChose =
+                                JColorChooser.showDialog(null, "Line Color Chooser", null);
+                if (colorUserChose != null) {
+                    myDrawingPanel.setColor(colorUserChose);
+                    color.setIcon(createDynamicColorIcon(colorUserChose));
+                }
+            }
+        });
+        color.setMnemonic(KeyEvent.VK_C);
+        color.setIcon(createDynamicColorIcon(Color.BLACK));
+
+        // need to have a box that shows the current color of the JColorChooser
+        final JSlider thickSubMenu = new JSlider();
+        thickSubMenu.setMaximum(THICKNESS_MAX);
+        thickSubMenu.setMajorTickSpacing(TICK_SPACING);
+        thickSubMenu.setMinorTickSpacing(1);
+        thickSubMenu.setPaintTicks(true);
+        thickSubMenu.setPaintLabels(true);
+        thickSubMenu.setValue(INITIAL_THICKNESS);
+        thickSubMenu.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent theChangeEvent) {
+                myDrawingPanel.setThickness(thickSubMenu.getValue());
+            }
+        });
+
+        optionMenu.add(grid);
+        optionMenu.addSeparator();
+        optionMenu.add(thickness);
+        thickness.add(thickSubMenu);
+        optionMenu.addSeparator();
+        optionMenu.add(color);
+
+        return optionMenu;
+    }
+
+    /**
+     * Helper function to create a dynamic color icon.
+     * @param theColor The color of the icon to create
+     * @return A new icon of size ICON_SIZE square with the
+     * given background color.
+     */
+    private Icon createDynamicColorIcon(final Color theColor) {
+        return new Icon() {
+            @Override
+            public int getIconHeight() {
+                return ICON_SIZE;
+            }
+
+            @Override
+            public int getIconWidth() {
+                return ICON_SIZE;
+            }
+
+            @Override
+            public void paintIcon(final Component theComponent, final Graphics theGraphics,
+                                  final int theStartX, final int theStartY) {
+                theGraphics.setColor(theColor);
+                theGraphics.fillRect(theStartX, theStartY, getIconWidth(),
+                                     getIconHeight());
+            }
+        };
+    }
+
+    /**
+     * Build and return the tool menu.
+     * @return the tool menu.
+     */
+    private JMenu buildToolMenus() {
+        final JMenu toolBar = new JMenu("Tools");
+        toolBar.setMnemonic(KeyEvent.VK_T);
+        final ButtonGroup toolMenuBG = new ButtonGroup();
+
+        for (final Action a : myToolActions) {
+            final JRadioButton toolRadioButton = new JRadioButton(a);
+            toolMenuBG.add(toolRadioButton);
+            toolBar.add(toolRadioButton);
+        }
+
+        return toolBar;
+    }
+
+    /**
+     * builds the help menu.
+     * 
+     * @return the help menu.
+     */
+    public JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+        final JMenuItem about = new JMenuItem("About...");
+        about.setMnemonic(KeyEvent.VK_A);
+        about.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                JOptionPane.showMessageDialog(myJFrame,
+                                              "TCSS 305 PowerPaint, Autumn 2015",
+                                              "Sophie Nop", JOptionPane.INFORMATION_MESSAGE);
+
+            }
+
+        });
+
+        helpMenu.add(about);
+        return helpMenu;
+    }
+
+    /**
+     * builds the tool bar.
+     * 
+     * @return the tool bar.
+     */
+    public JToolBar buildToolBar() {
+        final JToolBar toolbar = new JToolBar();
+        final ButtonGroup buttonGroup = new ButtonGroup();
+        for (final Action a : myToolActions) {
+            final JRadioButton toolbarButton = new JRadioButton(a);
+            buttonGroup.add(toolbarButton);
+            toolbar.add(toolbarButton);
+        }
+
+        return toolbar;
+    }
+}

@@ -1,0 +1,339 @@
+/*
+ * Assignment 5 TCSS 305 - Programming Practicum
+ */
+
+package gui;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+import javax.swing.JPanel;
+import javax.swing.event.MouseInputAdapter;
+
+import shapes.DrawableShape;
+import tools.PowerPaintTool;
+
+/**
+ * A PowerPaintDrawingPanel class.
+ * 
+ * @author Sophie Nop
+ * @version 11 November 2015
+ *
+ */
+public class PowerPaintDrawingPanel extends JPanel {
+
+    /**
+     * Generated.
+     */
+    private static final long serialVersionUID = -7113945567842866560L;
+
+    /**
+     * The grid spacing.
+     */
+    private static final int GRID_SPACING = 10;
+
+    /**
+     * The width of the grid.
+     */
+    private static final int GRID_STROKE_WIDTH = 1;
+
+    /**
+     * The color of the grid.
+     */
+    private static final Color GRID_COLOR = Color.GRAY;
+    /**
+     * A list to hold things to draw.
+     */
+    private final List<DrawableShape> myThingsToDraw;
+    
+    /**
+     * A list that holds shapes that have been undone, so we can
+     * redo them if necessary.
+     */
+    private final Stack<DrawableShape> myUndoneShapes;
+
+    /**
+     * An instance of DrawableShape interface that the user is currently working
+     * on.
+     */
+    private DrawableShape myCurrentObject;
+
+    /**
+     * The color to use to draw.
+     */
+    private Color myCurrentColor;
+
+    /**
+     * The thickness of my lines.
+     */
+    private int myCurrentThickness;
+
+    /**
+     * Whether the grid is shown.
+     */
+    private boolean myGridEnabled;
+
+    /**
+     * The selected tool.
+     */
+    private PowerPaintTool myCurrentTool;
+    
+    /**
+     * Everybody that's signed up to receive our updates about things being drawn.
+     */
+    private final List<PowerPaintReceiver> myReceivers;
+    
+    /**
+     * Builds a new PowerPaintDrawingPanel.
+     * @param theStartingThickness The starting thickness of shapes drawn.
+     * @param theStartingColor The starting color of shapes
+     */
+    public PowerPaintDrawingPanel(final int theStartingThickness, 
+                                  final Color theStartingColor) {
+        super();
+        myThingsToDraw = new ArrayList<DrawableShape>();
+        myUndoneShapes = new Stack<DrawableShape>();
+        final PaintListener paintListener = new PaintListener();
+        // We have to add the paint listener both a mouse listener and
+        // a mouse motion listener to work properly
+        this.addMouseListener(paintListener); // mousePressed and MouseReleased
+        this.addMouseMotionListener(paintListener); // mouseDrag
+        myReceivers = new ArrayList<PowerPaintReceiver>();
+        myCurrentColor = theStartingColor;
+        myCurrentThickness = theStartingThickness;
+    }
+
+    /**
+     * Adds a class to our list of receivers that will listen when we change our shapes.
+     * @param theReceiver The receiver to add.
+     */
+    public void addReceiver(final PowerPaintReceiver theReceiver) {
+        myReceivers.add(theReceiver);
+    }
+    
+    /**
+     * Send a notification to our receivers that we've just changed - drawn or cleared.
+     */
+    private void sendUpdate() {
+        for (final PowerPaintReceiver r : myReceivers) {
+            r.receivePowerPaintNotification();
+        }
+    }
+    
+    /**
+     * Undoes the last drawn shape.
+     * @throws IllegalStateException if there is nothing to undo.
+     */
+    public void undo() {
+        if (myThingsToDraw.isEmpty()) {
+            throw new IllegalStateException("Can't undo - no drawings!");
+        }
+        final int lastItemIndex = myThingsToDraw.size() - 1;
+        myUndoneShapes.push(myThingsToDraw.get(lastItemIndex));
+        myThingsToDraw.remove(lastItemIndex);
+        repaint();
+        sendUpdate();
+    }
+    
+    /**
+     * Redoes the last undone action.
+     * @throws IllegalStateException if there is nothing to redo.
+     */
+    public void redo() {
+        if (myUndoneShapes.isEmpty()) {
+            throw new IllegalStateException("Can't redo - no undone actions!");
+        }
+        myThingsToDraw.add(myUndoneShapes.pop());
+        repaint();
+        sendUpdate();
+    }
+    
+    /**
+     * Sets the thickness to use when drawing.
+     * 
+     * @param theThickness The new thickness (in pixels)
+     */
+    public void setThickness(final int theThickness) {
+        myCurrentThickness = theThickness;
+    }
+
+    /**
+     * Sets the line color to use when drawing.
+     * 
+     * @param theColor The new color.
+     */
+    public void setColor(final Color theColor) {
+        // Color object get the new color that is chosen.
+        myCurrentColor = theColor;
+    }
+
+    /**
+     * Sets whether the grid is shown.
+     * @param theGridEnabled True to enable the grid, false to disable it.
+     */
+    public void setGridEnabled(final boolean theGridEnabled) {
+        myGridEnabled = theGridEnabled;
+        repaint();
+    }
+    
+    /**
+     * Checks if we can undo.
+     * @return True if it's OK to call undo, false otherwise.
+     */
+    public boolean canUndo() {
+        return !myThingsToDraw.isEmpty();
+    }
+    
+    /**
+     * Checks if we can redo.
+     * @return True if it's ok to call redo, false otherwise.
+     */
+    public boolean canRedo() {
+        return !myUndoneShapes.isEmpty();
+    }
+
+    /**
+     * drawGrid draws horizontal and vertical lines.
+     * 
+     * @param theGraphics the graphics for the grid.
+     */
+    private void drawGrid(final Graphics2D theGraphics) {
+        theGraphics.setStroke(new BasicStroke(GRID_STROKE_WIDTH));
+        theGraphics.setColor(GRID_COLOR);
+
+        for (int i = 0; i < this.getHeight(); i += GRID_SPACING) {
+            theGraphics.drawLine(0, i, this.getWidth(), i);
+        }
+
+        for (int j = 0; j < this.getWidth(); j += GRID_SPACING) {
+            theGraphics.drawLine(j, 0, j, this.getHeight());
+        }
+    }
+
+    /**
+     * This method draws our graphics objects painted by the user to the screen.
+     * 
+     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+     * @param theGraphics The graphics object to use for drawing.
+     */
+    protected void paintComponent(final Graphics theGraphics) {
+        // MAKE SURE you call the parent paintComponenet
+        super.paintComponent(theGraphics);
+
+        // cast Graphics object to the "newer-ish" Graphics2D class.
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+
+        // for better graphics display
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                             RenderingHints.VALUE_ANTIALIAS_ON);
+
+        for (final DrawableShape drawableObject : myThingsToDraw) {
+            drawableObject.drawSelf(g2d);
+        }
+
+        // Start Painting things!
+        if (myCurrentObject != null) {
+            myCurrentObject.drawSelf(g2d);
+        }
+
+        // call to draw grid
+        if (myGridEnabled) {
+            drawGrid(g2d);
+        }
+    }
+    
+    /**
+     * Sets the tool to use when we draw.
+     * @param theNewTool The new tool to use
+     */
+    public void setMyTool(final PowerPaintTool theNewTool) {
+        myCurrentTool = theNewTool;
+    }
+
+    /**
+     * Clear my drawings. Sets everything (including undos) back to square one.
+     */
+    public void clearMyDrawings() {
+        myThingsToDraw.clear();
+        myUndoneShapes.clear();
+        repaint();
+        sendUpdate();
+    }
+
+    /**
+     * Listener to handle painting with different tools on a PowerPaintDrawingPanel.
+     * @author Sophie
+     *
+     */
+    private class PaintListener extends MouseInputAdapter {
+
+        /**
+         * Handle the mouse being pressed - we start drawing.
+         * @param theMouseEvent the mouse event that caused this listener to be called.
+         */
+        public void mousePressed(final MouseEvent theMouseEvent) {
+            if (myCurrentThickness > 0) {
+                myCurrentTool.startDrawing(theMouseEvent.getX(),
+                                           theMouseEvent.getY(),
+                                           myCurrentThickness, myCurrentColor);
+                // We have to give it an initial update to populate myCurrentObject
+                myCurrentObject = myCurrentTool.update(theMouseEvent.getX(),
+                                                       theMouseEvent.getY());
+            }
+            repaint();
+        }
+        
+        /**
+         * Update the drawing as the user moves the mouse while the mouse button is pressed.
+         * @param theMouseEvent the mouse event that caused this listener to be called.
+         * @see
+         * java.awt.event.MouseAdapter#mouseDragged(java.awt.event.MouseEvent)
+         */
+        public void mouseDragged(final MouseEvent theMouseEvent) {
+            if (myCurrentObject != null) {
+                myCurrentObject = myCurrentTool.update(theMouseEvent.getX(),
+                                                       theMouseEvent.getY());
+            }
+            repaint();
+        }
+
+        /**
+         * Finish up drawing when the user has released the mouse button.
+         * Also clears the redo actions, because it doesn't make sense to redo after
+         * we've done something else.
+         * 
+         * @param theMouseEvent the mouse event that caused this listener to be called.
+         * @see
+         * java.awt.event.MouseAdapter#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(final MouseEvent theMouseEvent) {
+            if (myCurrentObject != null) {
+                myCurrentObject = myCurrentTool.update(theMouseEvent.getX(),
+                                                       theMouseEvent.getY());
+                myThingsToDraw.add(myCurrentObject);
+                myCurrentObject = nullDrawable(); // after we're done, set current object null
+            }
+            repaint();
+            myUndoneShapes.clear();
+            sendUpdate();
+        }
+
+        /**
+         * Returns a null Drawable to represent a clear state.
+         * 
+         * @return Always null.
+         */
+        private DrawableShape nullDrawable() {
+            return null;
+        }
+
+    }
+
+}

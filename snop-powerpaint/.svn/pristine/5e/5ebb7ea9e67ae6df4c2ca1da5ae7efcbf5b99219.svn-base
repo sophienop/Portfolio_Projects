@@ -1,0 +1,195 @@
+
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Toolkit;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+
+/**
+ * @author Sophie Nop
+ * @version 5 November 2015
+ *
+ */
+public class PowerPaintGUI {
+
+    /**
+     * 
+     */
+
+    /** The default width value. */
+    private static final int WIDTH = 500;
+
+    /** The default height value. */
+    private static final int HEIGHT = 500;
+
+    /**
+     * Displays the window.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * JMenuBar to hold the Menu items.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * 
+     */
+    private JPanel myPanel;
+
+    /**
+     * 
+     */
+    public PowerPaintGUI() {
+        myJFrame = new JFrame();
+        myJFrame.setTitle("PowerPaint");
+        myPanel = new JPanel();
+        myMenuBar = new JMenuBar();
+    }
+
+    /**
+     * method that runs the program within main.
+     */
+    public void start() {
+        createFrame();
+    }
+
+    /**
+     * creatFrame creates the application.
+     * 
+     * @return the Window application.
+     */
+    public JFrame createFrame() {
+        myJFrame.setLayout(new BorderLayout());
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/paintIcon.png"));
+        myJFrame.setResizable(true);
+
+        myJFrame.setJMenuBar(buildMenuBar());
+        myJFrame.add(buildToolBar(), BorderLayout.SOUTH);
+        myJFrame.add(myPanel).setBackground(Color.WHITE);
+        myJFrame.pack();
+        myJFrame.setSize(WIDTH, HEIGHT);
+        myJFrame.setVisible(true);
+        myJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        return myJFrame;
+
+    }
+
+    // Menu Bar: File Options Tools Help
+    /**
+     * Creates the menu bar.
+     * 
+     * @return a menu.
+     */
+    public JMenuBar buildMenuBar() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildToolMenu());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+    }
+
+    /**
+     * @return the file menu.
+     */
+    public JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("File");
+        final JMenuItem undoItem = new JMenuItem("Undo");
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        fileMenu.add(undoItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+        return fileMenu;
+
+    }
+
+    /**
+     * @return the option menu.
+     */
+    public JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Options");
+
+        final JMenuItem grid = new JMenuItem("Grid");
+        // need to turn into checkbox grid.setIcon(new
+        // ImageIcon("./images/rectangle_bw.gif"));
+        final JMenu thickness = new JMenu("Thickness");
+        final JMenuItem color = new JMenuItem("Color");
+        color.setIcon(new ImageIcon("./images/rectangle.gif"));
+
+        optionMenu.add(grid);
+        optionMenu.addSeparator();
+        optionMenu.add(thickness);
+        optionMenu.addSeparator();
+        optionMenu.add(color);
+
+        return optionMenu;
+    }
+
+    /**
+     * @return the toolbar.
+     */
+    public JMenu buildToolMenu() {
+        final JMenu toolBar = new JMenu("Tools");
+
+        final JRadioButton pencil = new JRadioButton("pencil");
+        final JRadioButton line = new JRadioButton("line");
+        final JRadioButton rectangle = new JRadioButton("rec");
+        final JRadioButton ellipse = new JRadioButton("ellipse");
+
+        toolBar.add(pencil);
+        toolBar.add(line);
+        toolBar.add(rectangle);
+        toolBar.add(ellipse);
+
+        return toolBar;
+    }
+
+    /**
+     * builds the help menu.
+     * 
+     * @return the help menu.
+     */
+    public JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        final JMenuItem about = new JMenuItem("About");
+        helpMenu.add(about);
+        return helpMenu;
+    }
+
+    /**
+     * builds the tool bar.
+     * 
+     * @return the tool bar.
+     */
+    public JToolBar buildToolBar() {
+        final JToolBar toolBar = new JToolBar("");
+        final JToggleButton pencil = new JToggleButton("Pencil",
+                                                  new ImageIcon("./images/pencil.gif"), true);
+        final JToggleButton line =
+                        new JToggleButton("Line", new ImageIcon("./images/line_bw.gif"),
+                                          false);
+        final JToggleButton rec =
+                        new JToggleButton("Rectangle",
+                                          new ImageIcon("./images/rectangle_bw.gif"), false);
+        final JToggleButton ellipse =
+                        new JToggleButton("Ellipse", new ImageIcon("./images/ellipse_bw.gif"),
+                                          false);
+
+        toolBar.add(pencil);
+        toolBar.add(line);
+        toolBar.add(rec);
+        toolBar.add(ellipse);
+
+        return toolBar;
+    }
+}

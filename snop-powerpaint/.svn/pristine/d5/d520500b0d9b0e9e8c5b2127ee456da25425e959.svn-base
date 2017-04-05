@@ -1,0 +1,8 @@
+package shapes;
+
+import java.awt.Graphics2D;
+
+public interface Drawable {
+    void drawSelf(Graphics2D g);
+    void update(int theXUpdate, int theYUpdate);
+}

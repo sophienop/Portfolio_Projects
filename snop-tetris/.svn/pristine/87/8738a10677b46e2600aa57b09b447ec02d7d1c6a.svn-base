@@ -1,0 +1,169 @@
+package controller;
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.Timer;
+
+import model.Board;
+import view.ScorePanel;
+import view.TetrisControls;
+
+/**
+ * Key adapter for tetris controls. Handles down, left, right, rotate, and
+ * hard drop. These controls are customizable. Also handles pause and new
+ * game. These controls are not customizable.
+ * 
+ * @author Sophie Nop
+ * @version 29 November 2015
+ */
+public class TetrisControlAdapter extends KeyAdapter {
+    /**
+     * 
+     */
+    private static final int BOARD_WIDTH = 10;
+
+    /**
+     * 
+     */
+    private static final int BOARD_HEIGHT = 20; 
+    /**
+     * A map to hold the customizable controls. It maps integers to
+     * TetrisControls because Java treats KeyEvents as integers internally.
+     */
+    private final Map<Integer, TetrisControls> myControlMap;
+ 
+    
+    /**
+     * The tetris board. 
+     */
+    private final Board myBoard; 
+    
+    /**
+     * The timer for the game. 
+     */
+    private final Timer myTimer;
+
+    /**
+     * When the game is over. 
+     */
+    private boolean myGameIsOver;
+
+    /**
+     * When the game is paused. 
+     */
+    private boolean myGameIsPaused; 
+    
+    /**
+     * The score panel.  
+     */
+    private final ScorePanel myScorePanel;
+
+    /**
+     * @param theBoard the tetris board. 
+     * @param theTimer the timer for the tetris blocks. 
+     * @param theScorePanel the score panel. 
+     */
+    public TetrisControlAdapter(final Board theBoard, 
+                                final Timer theTimer, 
+                                final ScorePanel theScorePanel) {
+        super();
+        myBoard = theBoard; 
+        myTimer = theTimer; 
+        myScorePanel = theScorePanel; 
+        myControlMap = new HashMap<Integer, TetrisControls>();
+        // Set up default controls
+        controlMap();
+        myGameIsPaused = false; 
+        
+    }
+    
+    /**
+     * Creates a map of key events and controls. 
+     */
+    private void controlMap() {
+        myControlMap.put(KeyEvent.VK_DOWN, TetrisControls.DOWN);
+        myControlMap.put(KeyEvent.VK_UP, TetrisControls.ROTATE);
+        myControlMap.put(KeyEvent.VK_LEFT, TetrisControls.LEFT);
+        myControlMap.put(KeyEvent.VK_RIGHT, TetrisControls.RIGHT);
+        myControlMap.put(KeyEvent.VK_SPACE, TetrisControls.HARD_DROP);
+        
+    }
+    
+    /**
+     * Gets the control map.
+     * 
+     * @return A map of KeyEvent integers to TetrisControls
+     */
+    public Map<Integer, TetrisControls> getControlMap() {
+        return myControlMap;
+    }
+
+    /**
+     * Handle the game control input (down, rotate, left/right, hard drop).
+     * 
+     * @param theEvent The game control key event.
+     */
+    private void handleGameControls(final KeyEvent theEvent) {
+        final TetrisControls gameInput = myControlMap.get(theEvent.getKeyCode());
+        if (gameInput != null) {
+            switch (gameInput) {
+                case LEFT:
+                    myBoard.moveLeft();
+                    break;
+                case RIGHT:
+                    myBoard.moveRight();
+                    break;
+                case DOWN:
+                    myBoard.moveDown();
+                    break;
+                case ROTATE:
+                    myBoard.rotate();
+                    break;
+                case HARD_DROP:
+                    myBoard.hardDrop();
+                    break;
+                default:
+                    // Shouldn't ever get here. Do nothing.
+                    break;
+            }
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see java.awt.event.KeyAdapter#keyPressed(java.awt.event.KeyEvent)
+     */
+    @Override
+    public void keyPressed(final KeyEvent theEvent) {
+        if (!myGameIsPaused && !myBoard.isGameOver()) {
+            handleGameControls(theEvent);
+        }
+
+        if (theEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            myGameIsOver = true;
+            myGameIsPaused = true;
+            myTimer.stop();
+//            gameOverAction();
+        }
+
+        if (theEvent.getKeyCode() == KeyEvent.VK_P) {
+            // toggle buttons
+            if (myGameIsPaused) {
+                myGameIsPaused = false;
+                myTimer.start();
+
+            } else {
+                myGameIsPaused = true;
+                myTimer.stop();
+            }
+        }
+        if (myGameIsOver && theEvent.getKeyCode() == KeyEvent.VK_N) {
+            myBoard.newGame(BOARD_WIDTH, BOARD_HEIGHT, null);
+            myScorePanel.reset();
+            myTimer.start();
+            myGameIsPaused = false;
+        }
+    }
+}

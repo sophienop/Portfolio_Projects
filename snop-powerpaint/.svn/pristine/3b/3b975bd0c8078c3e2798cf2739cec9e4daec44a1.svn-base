@@ -1,0 +1,15 @@
+package gui;
+
+/**
+ * When a class implements this interface it says it will receive
+ * PowerPaint events.
+ * @author Sophie
+ * @version 1
+ */
+public interface PowerPaintReceiver {
+    /**
+     * Says that something has changed, so receivers should check in with the
+     * PowerPaintDrawingPanel that sent this notification.
+     */
+    void receivePowerPaintNotification();
+}

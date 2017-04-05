@@ -1,0 +1,142 @@
+/*
+ * TCSS 305 – Autumn 2015 
+ * Assignment 6a – Tetris
+ */
+
+package view;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.KeyEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JPanel;
+
+/**
+ * Info panel that displays game instructions for the user. 
+ * @author Sophie Nop
+ * @version 29 November 2015.
+ */
+public class InfoPanel extends JPanel {
+
+    /**
+     * Generated. 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /** Font size for text in this panel. */
+    private static final int FONT_SIZE = 18;
+    
+    /**
+     * Top line label for the info/instruction panel.
+     */
+    private static final String INSTRUCTION_LABEL = "Instructions";
+    
+    /**
+     * Description of the rotate control.
+     */
+    private static final String ROTATE_LABEL = "Rotate: ";
+    
+    /**
+     * Description of the down control.
+     */
+    private static final String DOWN_LABEL = "Down: ";
+    
+    /**
+     * Description of the move-left control.
+     */
+    private static final String LEFT_LABEL = "Left: ";
+    
+    /**
+     * Description of the move-right control.
+     */
+    private static final String RIGHT_LABEL = "Right: ";
+    
+    /**
+     * Description of the hard-drop control.
+     */
+    private static final String HARD_DROP_LABEL = "Drop: ";
+    
+    /**
+     * The control map we will describe.
+     */
+    private Map<Integer, TetrisControls> myControlMap;
+    
+    /**
+     * Sets the controls this info panel will describe.
+     * @param theControlMap The control map to describe.
+     */
+    public void setControls(final Map<Integer, TetrisControls> theControlMap) {
+        myControlMap = theControlMap;
+    }
+    
+    @Override 
+    public void paintComponent(final Graphics theGraphics) { 
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                             RenderingHints.VALUE_ANTIALIAS_ON);
+        final Font font = new Font(Font.DIALOG,
+                                   Font.LAYOUT_NO_START_CONTEXT + Font.HANGING_BASELINE,
+                                   FONT_SIZE);
+        g2d.setFont(font);
+        g2d.setColor(Color.DARK_GRAY);
+        final List<String> helpStrings = getTextToDraw();
+        for (int i = helpStrings.size() - 1; i >= 0; i--) {
+            final FontRenderContext rC = g2d.getFontRenderContext();
+            final GlyphVector gV = 
+                    font.createGlyphVector(rC, helpStrings.get(i));
+            final Rectangle2D textBox = gV.getVisualBounds().getBounds();
+            
+            final int x = (int) ((getWidth() - textBox.getWidth()) / 2
+                        - textBox.getX());
+            g2d.drawString(helpStrings.get(i), x, (i + 1) * FONT_SIZE);
+        }
+        
+        
+    }
+
+    /**
+     * Gets the help strings to draw on the screen.
+     * @return The help strings describing this tetris game's controls.
+     */
+    private List<String> getTextToDraw() {
+        final List<String> toReturn = new ArrayList<String>();
+        toReturn.add(INSTRUCTION_LABEL);
+        for (final Integer keyEventCode : myControlMap.keySet()) {
+            final String keyDescription = KeyEvent.getKeyText(keyEventCode);
+            final TetrisControls control = myControlMap.get(keyEventCode);
+            String eventDescription = "";
+            switch (control) {
+                case ROTATE:
+                    eventDescription = ROTATE_LABEL;
+                    break;
+                case DOWN:
+                    eventDescription = DOWN_LABEL;
+                    break;
+                case LEFT:
+                    eventDescription = LEFT_LABEL;
+                    break;
+                case RIGHT:
+                    eventDescription = RIGHT_LABEL;
+                    break;
+                case HARD_DROP:
+                    eventDescription = HARD_DROP_LABEL;
+                    break;
+                default:
+                    // should never get here
+                    break;
+            }
+            toReturn.add(eventDescription + keyDescription);
+        }
+        return toReturn;
+    }
+}

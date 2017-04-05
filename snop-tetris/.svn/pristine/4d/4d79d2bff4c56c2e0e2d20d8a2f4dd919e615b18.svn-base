@@ -1,0 +1,198 @@
+
+package view;
+
+import controller.AboutAction;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * @author Sophie Nop.
+ * @version 6 December 2015
+ */
+public class TetrisMenuBar {
+    
+    /**
+     * The board's width in blocks.
+     */
+    private static final int BOARD_WIDTH = 10;
+
+    /**
+     * The board's height in blocks.
+     */
+    private static final int BOARD_HEIGHT = 20;
+    
+    /**
+     * The menu bar.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * The window frame. 
+     */
+    private JFrame myJFrame;
+
+    /**
+     * The time for the game. 
+     */
+    private final Timer myTimer;
+
+    /**
+     * The Tetris board. 
+     */
+    private final Board myBoard;
+
+    /**
+     * The score panel. 
+     */
+    private final ScorePanel myScorePanel;
+
+    /**
+     * The Tetris GUI. 
+     */
+    private final TetrisGUI myTetrisGUI;
+
+
+
+    /**
+     * @param theTetrisGUI the tetris panel we are using. 
+     * @param theBoard the tetris board logic. 
+     * @param theTimer the timer from the Board. 
+     * @param theScorePanel the score panel. 
+     */
+    public TetrisMenuBar(final TetrisGUI theTetrisGUI, final Board theBoard,
+                         final Timer theTimer, final ScorePanel theScorePanel) {
+        myTetrisGUI = theTetrisGUI;
+        myMenuBar = new JMenuBar();
+        myTimer = theTimer;
+        myBoard = theBoard;
+        myScorePanel = theScorePanel;
+
+    }
+
+    /**
+     * @return the menu bar.
+     */
+    JMenuBar buildMenu() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+
+    }
+
+    /**
+     * @return the file menu.
+     */
+    private JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("Game");
+        fileMenu.setMnemonic(KeyEvent.VK_G);
+
+        final JMenuItem newGame = new JMenuItem("Start New Game");
+        newGame.setMnemonic(KeyEvent.VK_N);
+        newGame.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myBoard.isGameOver()) {
+
+                    myScorePanel.reset();
+                    myBoard.newGame(BOARD_WIDTH, BOARD_HEIGHT, null);
+                    myTimer.restart();
+                }
+            }
+        });
+
+        final JMenuItem endGame = new JMenuItem("End Game");
+        endGame.setMnemonic(KeyEvent.VK_E);
+        endGame.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTetrisGUI.getTimer().stop();
+                //when the user ends the game the user can hit new game and it should work 
+            }
+
+        });
+        final JMenuItem save = new JMenuItem("Save");
+        save.setMnemonic(KeyEvent.VK_S);
+
+        final JMenuItem pause = new JMenuItem("Pause");
+        pause.setMnemonic(KeyEvent.VK_P);
+        pause.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+            }
+
+        });
+        final JMenuItem exit = new JMenuItem("Exit");
+        exit.setMnemonic(KeyEvent.VK_X);
+        exit.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+                myTetrisGUI.getJFrame().dispose();
+
+                myJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+            }
+
+        });
+
+        fileMenu.add(newGame);
+        fileMenu.add(pause);
+        fileMenu.add(endGame);
+        fileMenu.add(exit);
+
+        return fileMenu;
+    }
+
+    /**
+     * @return the option menu.
+     */
+    private JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Option");
+        final JMenuItem level = new JMenuItem("Levels");
+        final JMenuItem sound = new JMenuItem("Sound");
+        final JMenuItem color = new JMenuItem("Color");
+        optionMenu.add(level);
+        optionMenu.add(sound);
+        optionMenu.add(color);
+
+        return optionMenu;
+    }
+
+    /**
+     * @return helpMenu returns the help menu.
+     */
+    private JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+
+        helpMenu.add(new AboutAction(myJFrame));
+        return helpMenu;
+    }
+
+    /**
+     * Helper method to display when the game is over.
+     */
+    public void gameOverAction() {
+        final String message = "Game Over!";
+        JOptionPane.showMessageDialog(myJFrame, message);
+
+    }
+
+}

@@ -1,0 +1,323 @@
+/*
+ * TCSS 305 – Autumn 2015 
+ * Assignment 5b – powerpaint
+ */
+
+package gui;
+
+import gui.actions.AboutAction;
+import gui.actions.ClearAction;
+import gui.actions.ColorChooserAction;
+import gui.actions.GridAction;
+import gui.actions.RedoAction;
+import gui.actions.ToolSelectAction;
+import gui.actions.UndoAction;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import tools.EllipseTool;
+import tools.LineTool;
+import tools.PencilTool;
+import tools.PowerPaintTool;
+import tools.RectangleTool;
+
+/**
+ * Class that builds the GUI and has some action implemented.
+ * 
+ * @author Sophie Nop
+ * @version 5 November 2015
+ */
+public class PowerPaintGUI implements PowerPaintReceiver {
+
+    /**
+     * The size of the thickness adjustment (max value).
+     */
+    private static final int THICKNESS_MAX = 20;
+
+    /**
+     * The spacing of ticks on the thickness adjustment.
+     */
+    private static final int TICK_SPACING = 5;
+
+    /**
+     * The starting thickness.
+     */
+    private static final int INITIAL_THICKNESS = 1;
+
+    /**
+     * The starting color.
+     */
+    private static final Color INITIAL_COLOR = Color.BLACK;
+
+    /**
+     * The list of tools we will use.
+     */
+    private final List<ToolSelectAction> myToolActions;
+
+    /**
+     * Displays the window.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * JMenuBar to hold the Menu items.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * An action to clear all drawn items.
+     */
+    private Action myClearAction;
+
+    /**
+     * An action to undo the last shape drawn.
+     */
+    private Action myUndoAction;
+
+    /**
+     * An action to redo the last undone action.
+     */
+    private Action myRedoAction;
+
+    /**
+     * Holds the panel that we draw on.
+     */
+    private final PowerPaintDrawingPanel myDrawingPanel;
+
+    /**
+     * Constructor that creates the objects.
+     */
+    public PowerPaintGUI() {
+        myJFrame = new JFrame();
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/paintIcon.png"));
+        myDrawingPanel = new PowerPaintDrawingPanel(INITIAL_THICKNESS, INITIAL_COLOR);
+        myDrawingPanel.addReceiver(this);
+        myDrawingPanel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+        myMenuBar = new JMenuBar();
+
+        myToolActions = new ArrayList<ToolSelectAction>();
+        setupTools();
+        setupUndoRedoActions();
+    }
+
+    /**
+     * Set up the tools we'll use to draw with (helper for the constructor).
+     */
+    private void setupTools() {
+        
+        final PowerPaintTool[] tools = { 
+            new PencilTool(),
+            new LineTool(), 
+            new RectangleTool(), 
+            new EllipseTool() 
+            };
+        
+        for (final PowerPaintTool ppt : tools) {
+            myToolActions.add(new ToolSelectAction(ppt, myDrawingPanel));
+        }
+    }
+    
+    /**
+     * Set up the undo and redo actions (helper for the constructor).
+     */
+    private void setupUndoRedoActions() {
+        myClearAction = new ClearAction(myDrawingPanel);
+        myClearAction.setEnabled(false);
+        myUndoAction = new UndoAction(myDrawingPanel);
+        myUndoAction.setEnabled(false);
+        myRedoAction = new RedoAction(myDrawingPanel);
+        myRedoAction.setEnabled(false);
+    }
+
+    /**
+     * method that runs the program within main.
+     */
+    public void start() {
+        createFrame();
+        myToolActions.get(0).setThisTool();
+    }
+
+    /**
+     * createFrame creates the application.
+     * 
+     * @return the application window.
+     */
+    public JFrame createFrame() {
+        // Set up items in window
+        myJFrame.setTitle("PowerPaint");
+        myJFrame.setLayout(new BorderLayout());
+        myJFrame.add(myDrawingPanel).setBackground(Color.WHITE);
+        myJFrame.setJMenuBar(buildMenuBar());
+        myJFrame.add(buildToolBar(), BorderLayout.SOUTH);
+
+        // Set up window size and location
+        myJFrame.pack();
+        //Centers the GUI - have to pack it first before this call!
+        myJFrame.setLocationRelativeTo(myJFrame);
+        myJFrame.setVisible(true);
+        myJFrame.setResizable(true);
+        myJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        return myJFrame;
+    }
+
+    /**
+     * When our PowerPaintDrawingPanel updates, this lets it tell us
+     * that it has new information. Here it is used to set the undo/redo
+     * action items.
+     * @see gui.PowerPaintReceiver#receivePowerPaintNotification()
+     */
+    public void receivePowerPaintNotification() {
+        myUndoAction.setEnabled(myDrawingPanel.canUndo());
+        myRedoAction.setEnabled(myDrawingPanel.canRedo());
+        myClearAction.setEnabled(myDrawingPanel.canUndo());
+    }
+
+    /**
+     * Creates the menu bar.
+     * 
+     * @return The menu.
+     */
+    private JMenuBar buildMenuBar() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildToolMenus());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+    }
+
+    /**
+     * Build the file menu.
+     * @return the file menu.
+     */
+    private JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+
+        final JMenuItem undoMenuItem = new JMenuItem(myUndoAction);
+        final JMenuItem redoMenuItem = new JMenuItem(myRedoAction);
+        final JMenuItem clearMenuItem = new JMenuItem(myClearAction);
+
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.setMnemonic(KeyEvent.VK_X);
+        exitItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                myJFrame.dispose();
+            }
+        });
+
+        fileMenu.add(undoMenuItem);
+        fileMenu.add(redoMenuItem);
+        fileMenu.add(clearMenuItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+        return fileMenu;
+    }
+
+    /**
+     * @return the option menu.
+     */
+    private JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Options");
+        optionMenu.setMnemonic(KeyEvent.VK_O);
+
+        final JMenu thickness = new JMenu("Thickness");
+        thickness.setMnemonic(KeyEvent.VK_T);
+        
+        // need to have a box that shows the current color of the JColorChooser
+        final JSlider thickSubMenu = new JSlider();
+        thickSubMenu.setMaximum(THICKNESS_MAX);
+        thickSubMenu.setMajorTickSpacing(TICK_SPACING);
+        thickSubMenu.setMinorTickSpacing(1);
+        thickSubMenu.setPaintTicks(true);
+        thickSubMenu.setPaintLabels(true);
+        thickSubMenu.setValue(INITIAL_THICKNESS);
+        thickSubMenu.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent theChangeEvent) {
+                myDrawingPanel.setThickness(thickSubMenu.getValue());
+            }
+        });
+
+        final GridAction gridAction = new GridAction(myDrawingPanel);
+        optionMenu.add(new JCheckBoxMenuItem(gridAction));
+        optionMenu.addSeparator();
+        optionMenu.add(thickness);
+        thickness.add(thickSubMenu);
+        optionMenu.addSeparator();
+        optionMenu.add(new ColorChooserAction(myDrawingPanel));
+
+        return optionMenu;
+    }
+
+    /**
+     * Build and return the tool menu.
+     * @return the tool menu.
+     */
+    private JMenu buildToolMenus() {
+        final JMenu toolMenu = new JMenu("Tools");
+        toolMenu.setMnemonic(KeyEvent.VK_T);
+        final ButtonGroup toolMenuBG = new ButtonGroup();
+
+        for (final Action a : myToolActions) {
+            final JRadioButton toolRadioButton = new JRadioButton(a);
+            toolMenuBG.add(toolRadioButton);
+            toolMenu.add(toolRadioButton);
+        }
+
+        return toolMenu;
+    }
+
+    /**
+     * Builds and returns the tool bar.
+     * @return the tool bar.
+     */
+    public JToolBar buildToolBar() {
+        final JToolBar toolbar = new JToolBar();
+        final ButtonGroup buttonGroup = new ButtonGroup();
+        
+        for (final Action a : myToolActions) {
+            final JToggleButton toolbarButton = new JToggleButton(a);
+            buttonGroup.add(toolbarButton);
+            toolbar.add(toolbarButton);
+        }
+        
+        return toolbar;
+    }
+    
+    /**
+     * Builds and returns the help menu.
+     * @return the help menu.
+     */
+    public JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+       
+        helpMenu.add(new AboutAction(myJFrame));
+        return helpMenu;
+    }
+
+}

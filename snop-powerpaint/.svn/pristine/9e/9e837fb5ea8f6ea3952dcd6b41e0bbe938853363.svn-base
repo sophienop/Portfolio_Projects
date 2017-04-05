@@ -1,0 +1,77 @@
+package shapes;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Stroke;
+import java.awt.geom.Line2D;
+
+/**
+ * A Drawable line for PowerPaint.
+ * @author Sophie
+ * @version 1
+ */
+public class Line implements Drawable {
+    
+    /**
+     * The X coordinate of the starting point.
+     */
+    private int myStartX;
+    /**
+     * The Y coordinate of the starting point.
+     */
+    private int myStartY;
+    /**
+     * The X coordinate of the ending point.
+     */
+    private int myEndX;
+    /**
+     * The Y coordinate of the ending point.
+     */
+    private int myEndY;
+    
+    /**
+     * Thickness.
+     */
+    private final Stroke myStroke;
+    /**
+     * Color of the line.
+     */
+    private final Color myColor;
+    
+    /**
+     * Creates a new Line.
+     * @param theStartX The X starting point.
+     * @param theStartY The Y starting point.
+     * @param theColor AWT Color of the line.
+     * @param theThickness Width of the line in pixels.
+     */
+    public Line(final int theStartX, final int theStartY,
+                final Color theColor, final int theThickness) {
+        myStartX = theStartX;
+        myEndX = theStartX;
+        myStartY = theStartY;
+        myEndY = theStartY;
+        myStroke = new BasicStroke(theThickness);
+        myColor = theColor;
+    }
+    
+    public void update(final int theUpdateX, final int theUpdateY) {
+        myEndX = theUpdateX;
+        myEndY = theUpdateY;
+    }
+    
+    /**
+     * @see shapes.Drawable#drawSelf(java.awt.Graphics)
+     * Draws this line on the given graphics object.
+     * @param theG the Graphics object to draw on
+     */
+    public void drawSelf(final Graphics2D theG) {
+        theG.setColor(myColor);
+        theG.setStroke(myStroke);
+        theG.draw(new Line2D.Float((float) myStartX, (float) myStartY,
+                                   (float) myEndX, (float) myEndY));
+    }
+}

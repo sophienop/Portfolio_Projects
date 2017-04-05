@@ -1,0 +1,29 @@
+Assignment name: Assignment 5
+TCSS 305: Programming Practicum, Autumn 2015
+
+Name: Sophie Nop
+UWNetID: snop
+Subversion Revision Number: 31
+
+Assignment Overview:
+To build a paint project from the ground up. To also practice good design through decoupling our code project and using multiple packages and classes. Moreover, this assignment required that students practice building the front and back end of a program. 
+
+Technical Impression:
+This assignment was very time consuming and complex. It required a lot of attention to detail. We were not given any starter code and so if our part a was incorrect than it was difficult to build our part b. 
+
+It took quite a bit of trouble shooting my logic to properly implement the lines, pencil, ellipse, and rectangle. For example, my grid curved to the left instead of drawing straight lines - this was because of my for loops. 
+
+Also this assignment really required that students learn to look for answers on our own. I know I referenced the API and the book a lot. 
+
+And to sync the tool menu and the tool bar together was initially very difficult but by constructing tools that know how to draw themselves and by having the tool bar and tool menu referencing the same action the tools were able to be in sync. 
+
+I had to go over the assignment specifications multiple times because there were information that I missed on part a. To check that everything was as correct as possible I tested the GUI and combed through the internal code multiple times.  
+
+For extra credit, I implemented an undo and redo option as its own action class. I found it easier to have classes for each action. It made the PowerPaintGUI class easier to manage and readable. 
+
+Unresolved problems in my submission:
+None.
+
+Questions:
+None. 
+

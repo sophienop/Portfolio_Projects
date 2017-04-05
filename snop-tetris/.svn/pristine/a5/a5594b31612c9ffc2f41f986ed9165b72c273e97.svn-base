@@ -1,0 +1,330 @@
+/*
+ * TCSS 305 – Autumn 2015 Assignment 6a – Tetris.
+ */
+
+// This gives a warning that a high number of imports indicates bad coupling.
+// We need to have those imports for GUI work.
+
+package view;
+
+import controller.ColorRandomizer;
+import controller.TetrisControlAdapter;
+import controller.TimerListener;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * @author Sophie Nop
+ * @version 29 November 2015
+ */
+public class TetrisGUI implements Observer {
+
+    /**
+     * The size of the blocks.
+     */
+    private static final int BLOCK_SIZE = 30;
+
+    /**
+     * The default dimension size of the game panel.
+     */
+    private static final Dimension DEFAULT_DIMENSION = new Dimension(500, 600);
+
+    /**
+     * The minimum default size of the game panel.
+     */
+    private static final Dimension TETRIS_PANEL_DEFAUL_MINIMUM_DIMENSION =
+                    new Dimension(500, 650);
+
+    /**
+     * Next piece box panel.
+     */
+    private static final int NEXT_PIECE_BOX_PANEL_WIDTH = 200;
+
+    /**
+     * Height of the score panel.
+     */
+    private static final int SCORE_PANEL_HEIGHT = 120;
+
+    /**
+     * Height of the information panel.
+     */
+    private static final int INFO_PANEL_HEIGHT = 120;
+
+    /**
+     * Padding for the box.
+     */
+    private static final int PADDING = 10;
+
+    /**
+     * The default timer.
+     */
+    private static final int DEFAULT_TIMER_SPEED = 900;
+
+    /**
+     * The board's width in blocks.
+     */
+    private static final int BOARD_WIDTH = 10;
+
+    /**
+     * The board's height in blocks.
+     */
+    private static final int BOARD_HEIGHT = 20;
+
+    /**
+     * The board game.
+     */
+    private final Board myBoard;
+
+    /**
+     * The frame.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * The Tetris Panel.
+     */
+    private final TetrisPanel myTetrisPanel;
+
+    /**
+     * The panel that displays the next piece.
+     */
+    private final NextPiece myNextPiecePanel;
+
+    /**
+     * The panel that will display the score.
+     */
+    private final ScorePanel myScorePanel;
+
+    /**
+     * The panel that will display the information.
+     */
+    private final InfoPanel myInfoPanel;
+
+    /**
+     * The menu bar. 
+     */
+    private final TetrisMenuBar myTetrisMenuBar; 
+
+    /**
+     * Color randomizer. 
+     */
+    private ColorRandomizer myColorRandomizer; 
+    /**
+     * The timer.
+     */
+    private final Timer myTimer;
+
+    /**
+     * When the game is over.
+     */
+    private boolean myGameIsOver;
+
+//    /**
+//     * When the game is paused.
+//     */
+//    private boolean myGameIsPaused;
+
+    /**
+     * Constructor that instantiates member fields.
+     */
+    public TetrisGUI() {
+        myJFrame = new JFrame();
+        myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+        myTetrisPanel = new TetrisPanel(myBoard);
+        myNextPiecePanel = new NextPiece(myBoard);
+        myInfoPanel = new InfoPanel();
+        myTimer = new Timer(DEFAULT_TIMER_SPEED, new TimerListener(myBoard));
+        myScorePanel = new ScorePanel(myBoard, myTimer, DEFAULT_TIMER_SPEED);
+        myTetrisMenuBar = new TetrisMenuBar(this, myBoard, myTimer, myScorePanel);
+        myColorRandomizer = new ColorRandomizer();
+        //        myMenuBar = new JMenuBar();
+        myBoard.addObserver(this);
+    }
+
+    /**
+     * Builds the frame and GUI components, and starts up the game.
+     */
+    public void start() {
+        setUpFrame();
+        myTimer.start();
+        myNextPiecePanel.setBackground(Color.WHITE);
+
+    }
+
+    /**
+     * Creates the frame.
+     * 
+     */
+    private void setUpFrame() {
+        myJFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+
+            /**
+             * When we shut down the window, we need to stop the timer, so the
+             * program can close completely.
+             * 
+             * @param theEvent the window closing event
+             */
+            @Override
+            public void windowClosed(final WindowEvent theEvent) {
+                myTimer.stop();
+            }
+        });
+        // myJFrame.addComponentListener(new ResizeListener());
+        setWestPanel();
+        setEastPanel();
+
+        myJFrame.setTitle("Tetris");
+        myJFrame.setJMenuBar(myTetrisMenuBar.buildMenu());
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/tetris.jpg"));
+        // the size of the game panel
+        myJFrame.setMinimumSize(TETRIS_PANEL_DEFAUL_MINIMUM_DIMENSION);
+        myJFrame.setSize(new Dimension(DEFAULT_DIMENSION));
+        myJFrame.setLocationRelativeTo(myJFrame);
+        myJFrame.setVisible(true);
+        // This must not be EXIT_ON_CLOSE or our timers keep running!
+        myJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        myJFrame.pack();
+
+//        myGameIsPaused = false;
+        myGameIsOver = false;
+
+        final TetrisControlAdapter handlesTheControl = 
+                        new TetrisControlAdapter(myBoard, myTimer, myScorePanel);
+        myJFrame.addKeyListener(handlesTheControl);
+        myInfoPanel.setControls(handlesTheControl.getControlMap());
+
+    }
+
+    /**
+     * sets up the west panel.
+     */
+    private void setWestPanel() {
+        myTetrisPanel.setBackground(Color.WHITE);
+        myTetrisPanel.setPreferredSize(new Dimension(myBoard.getWidth() * BLOCK_SIZE,
+                                                     myBoard.getHeight() * BLOCK_SIZE));
+        myJFrame.add(myTetrisPanel, BorderLayout.CENTER);
+    }
+
+    /**
+     * Sets up the east panel.
+     */
+    private void setEastPanel() {
+        // the whole east panel
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setBackground(myColorRandomizer.randomizeColors());
+        eastPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        final Box eastBox = new Box(BoxLayout.Y_AXIS);
+        eastBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // myNextPiecePanel.setBounds(x, y, width, height);
+        myNextPiecePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myNextPiecePanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH,
+                                                        NEXT_PIECE_BOX_PANEL_WIDTH));
+        final JLabel nextPieceStr = new JLabel("NEXT PIECE");
+        myNextPiecePanel.add(nextPieceStr);
+
+        // creates padding between the panel
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        myScorePanel.setBackground(Color.WHITE);
+        myScorePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myScorePanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH,
+                                                    SCORE_PANEL_HEIGHT));
+
+        eastBox.add(Box.createVerticalStrut(PADDING));
+
+        myInfoPanel.setBackground(Color.WHITE);
+        // creates a border for the panel
+        myInfoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myInfoPanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH,
+                                                   INFO_PANEL_HEIGHT));
+
+        eastBox.add(myNextPiecePanel);
+        eastBox.add(myScorePanel);
+        eastBox.add(myInfoPanel);
+        eastPanel.add(eastBox);
+        myJFrame.add(eastPanel, BorderLayout.EAST);
+    }
+
+    @Override
+    public void update(final Observable theObject, final Object theArgs) {
+        myTetrisPanel.repaint();
+        myNextPiecePanel.repaint();
+        myScorePanel.repaint();
+        myGameIsOver = myBoard.isGameOver();
+        if (myGameIsOver) {
+            myTimer.stop();
+            gameOverAction();
+        }
+
+    }
+
+    /**
+     * Helper method to display when the game is over.
+     */
+    public void gameOverAction() {
+        final String message = "Game Over!";
+
+        JOptionPane.showMessageDialog(myJFrame, message);
+
+    }
+
+    /**
+     * Returns the JFrame. 
+     * @return the JFrame. 
+     */
+    public JFrame getJFrame() {
+        return myJFrame;
+    }
+
+    /**
+     * Returns the Timer. 
+     * @return the Timer. 
+     */
+    public Timer getTimer() {
+        return myTimer;
+    }
+
+//    /**
+//     * Handles resizes of the Tetris class so the game board is kept the correct
+//     * size.
+//     * 
+//     * @author Sophie Nop
+//     * @version 12 December 2015
+//     */
+//    private class ResizeListener extends ComponentAdapter {
+//
+//        /**
+//         * When the frame is resized, force the height to be proportional to the
+//         * width.
+//         * 
+//         * @param theEvent The component event that notified us of the resize.
+//         * @see java.awt.event.ComponentAdapter#componentResized
+//    (java.awt.event.ComponentEvent)
+//         */
+//        public void componentResized(final ComponentEvent theEvent) {
+//            myJFrame.setResizable(false);
+//            // myJFrame.pack();
+//        }
+//    }
+
+
+}

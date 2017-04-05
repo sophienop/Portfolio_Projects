@@ -1,0 +1,32 @@
+
+package gui;
+
+import java.awt.EventQueue;
+
+/**
+ * @author Sophie Nop
+ * @version 5 November 2015
+ *
+ */
+public final class PowerPaintMain {
+    
+    /**
+     * Constructor that runs the program.  
+     */
+    private PowerPaintMain() {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * @param theArgs that takes in the argument. 
+     */
+    public static void main(final String[] theArgs) {
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                new PowerPaintGUI().start();
+            }
+        });
+    }
+}

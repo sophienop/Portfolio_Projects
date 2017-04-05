@@ -1,0 +1,65 @@
+/*
+ * TCSS 305 – Autumn 2015 Assignment 6a – Tetris
+ */
+
+package view;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.util.Arrays;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+
+import model.AbstractPiece;
+import model.Board;
+import model.Piece;
+
+/**
+ * @author Sophie
+ * @version 29 November 2015
+ */
+public class NextPiece extends JPanel {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /** Size of each block, in pixels. */
+    private static final int BLOCK_SIZE = 25;
+
+    /** The Tetris board that this panel represents. */
+    private final Board myBoard;
+
+    /**
+     * Constructor for TetrisPanel.
+     * 
+     * @param theBoard The Tetris Board whose next piece will be displayed on
+     *            this panel.
+     */
+    public NextPiece(final Board theBoard) {
+        super();
+        myBoard = theBoard;
+    }
+
+    @Override
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+
+        final Piece piece = myBoard.getNextPiece();
+        final int[][] currentPiece = ((AbstractPiece) piece).getRotation();
+        System.out.println(Arrays.deepToString(currentPiece));
+        g2d.setColor(Color.LIGHT_GRAY);
+
+        for (int block = 0; block < currentPiece.length; block++) {
+
+            g2d.fillRect(currentPiece[block][1] * BLOCK_SIZE, // currentPiece[block][0] is X
+                         currentPiece[block][0] * BLOCK_SIZE, // currentPiece[block][1] is Y
+                         BLOCK_SIZE, BLOCK_SIZE);
+        }
+    }
+}

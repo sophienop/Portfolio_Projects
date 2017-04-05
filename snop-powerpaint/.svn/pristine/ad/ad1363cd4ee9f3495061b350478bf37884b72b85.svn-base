@@ -1,0 +1,30 @@
+/*
+ * Assignment 5
+ * TCSS 305 - Programming Practicum
+ */
+
+package shapes;
+
+import java.awt.Graphics2D;
+
+/**
+ * Interface that has two abstract methods - drawSelf and Update x and y coordinates. 
+ * 
+ * @author Sophie Nop
+ * @version 11 November 2015
+ */
+
+public interface Drawable {
+    /**
+     * method to draw self. 
+     * @param theGrapics that is drawn. 
+     */
+    void drawSelf(Graphics2D theGrapics);
+    
+    /**
+     * Updates the x and y coordinates. 
+     * @param theXUpdate the x coordinate. 
+     * @param theYUpdate the y coordinate. 
+     */
+    void update(int theXUpdate, int theYUpdate);
+}

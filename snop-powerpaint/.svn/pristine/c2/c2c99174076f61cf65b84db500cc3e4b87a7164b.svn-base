@@ -1,0 +1,369 @@
+/*
+ * Assignment 5 TCSS 305 - Programming Practicum
+ */
+
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JColorChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import shapes.Drawable;
+
+/**
+ * Class that builds the GUI and has some action implemented.
+ * 
+ * @author Sophie Nop
+ * @version 5 November 2015
+ */
+public class PowerPaintGUI extends JPanel {
+
+    /**
+     * Instructor told us that we needed this.
+     */
+    private static final long serialVersionUID = 3316811765624525730L;
+
+    /** The default width value. */
+
+    /**
+     * default value of height. 
+     */
+    private static final int MY_HEIGHT = 200;
+    /**
+     * defualt value of width.
+     */
+    private static final int MY_WIDTH = 400;
+
+    /**
+     * The integer value of the slider tick marks.
+     */
+    private static final int TICK_MARKS = 20;
+
+    /**
+     * The integer value of the slider tick spacing.
+     */
+    private static final int TICK_SPACING = 5;
+
+    /**
+     * Pencil string.
+     */
+    private static final String PENCIL = "Pencil";
+
+    /**
+     * Line string.
+     */
+    private static final String LINE = "Line";
+    /**
+     * Rectangle string.
+     */
+    private static final String REC = "Rectangle";
+    /**
+     * Ellipse string.
+     */
+    private static final String ELLIPSE = "Ellipse";
+
+    /**
+     * my current objects.
+     */
+    private Drawable myCurrentObject;
+
+    /**
+     * List to hold paint objects.
+     */
+    private List<Drawable> myPaintObjects;
+
+    /**
+     * Displays the window.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * JMenuBar to hold the Menu items.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * Holds the JPanel.
+     */
+    private final PowerPaintDrawingPanel myDrawingPanel;
+    
+    /**
+     * my drawing panel grid. 
+     */
+    private final boolean myGridIsVisible; 
+
+    /**
+     * paintMode for switch statement.
+     */
+    private String myPaintMode;
+
+    /**
+     * Constructor that creates the objects.
+     */
+    public PowerPaintGUI() {
+        super();
+        myJFrame = new JFrame();
+        myDrawingPanel = new PowerPaintDrawingPanel();
+        myMenuBar = new JMenuBar();
+        myPaintObjects = new ArrayList<Drawable>();
+        myGridIsVisible = false; 
+    }
+
+    /**
+     * method that runs the program within main.
+     */
+    public void start() {
+        createFrame();
+    }
+
+    /**
+     * creatFrame creates the application.
+     * 
+     * @return the Window application.
+     */
+    public JFrame createFrame() {
+        myJFrame.setTitle("PowerPaint");
+        myJFrame.setLayout(new BorderLayout());
+        myJFrame.setPreferredSize(new Dimension(MY_WIDTH, MY_HEIGHT));
+        myJFrame.add(myDrawingPanel).setBackground(Color.WHITE);
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/paintIcon.png"));
+        myJFrame.setJMenuBar(buildMenuBar());
+        myJFrame.add(buildToolBar(), BorderLayout.SOUTH);
+        myJFrame.pack();
+        //Centers the GUI - have to pack it first before this call!
+        myJFrame.setLocationRelativeTo(myJFrame);
+        myJFrame.setVisible(true);
+        myJFrame.setResizable(true);
+        myJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        myPaintMode = LINE;
+        return myJFrame;
+
+    }
+
+    // Menu Bar: File Options Tools Help
+    /**
+     * Creates the menu bar.
+     * 
+     * @return a menu.
+     */
+    public JMenuBar buildMenuBar() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildToolMenu());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+    }
+
+    /**
+     * @return the file menu.
+     */
+    public JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        final JMenuItem undoItem = new JMenuItem("Undo all changes");
+        undoItem.setMnemonic(KeyEvent.VK_U);
+
+        undoItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                myDrawingPanel.clearingMyDrawings();
+
+            }
+
+        });
+
+        final JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.setMnemonic(KeyEvent.VK_X);
+        exitItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                myJFrame.dispose();
+            }
+
+        });
+        fileMenu.add(undoItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+        return fileMenu;
+
+    }
+
+    /**
+     * @return the option menu.
+     */
+    public JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Options");
+        optionMenu.setMnemonic(KeyEvent.VK_O);
+
+        final JCheckBoxMenuItem grid = new JCheckBoxMenuItem("Grid");
+        grid.setMnemonic(KeyEvent.VK_G);
+        
+        final JMenu thickness = new JMenu("Thickness");
+        thickness.setMnemonic(KeyEvent.VK_T);
+        final JMenuItem color = new JMenuItem("Color...", new ImageIcon());
+        
+        color.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+
+                final Color colorUserChose =
+                                JColorChooser.showDialog(null, "Line Color Chooser", null);
+                if (colorUserChose != null) {
+                    myDrawingPanel.setColor(colorUserChose);
+
+                }
+            }
+
+        });
+
+        color.setMnemonic(KeyEvent.VK_C);
+        // need to have a box that shows the current color of the JColorChooser
+        final JSlider thickSubMenu = new JSlider();
+        thickSubMenu.setMaximum(TICK_MARKS);
+        thickSubMenu.setMajorTickSpacing(TICK_SPACING);
+        thickSubMenu.setMinorTickSpacing(1);
+        thickSubMenu.setPaintTicks(true);
+        thickSubMenu.setPaintLabels(true);
+        thickSubMenu.setValue(1);
+        thickSubMenu.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent theChangeEvent) {
+                myDrawingPanel.setThickness(thickSubMenu.getValue());
+            }
+
+        });
+
+        optionMenu.add(grid);
+        optionMenu.addSeparator();
+        optionMenu.add(thickness);
+        thickness.add(thickSubMenu);
+        optionMenu.addSeparator();
+        optionMenu.add(color);
+
+        return optionMenu;
+    }
+
+    /**
+     * @return the toolbar.
+     */
+    public JMenu buildToolMenu() {
+        final JMenu toolBar = new JMenu("Tools");
+        toolBar.setMnemonic(KeyEvent.VK_T);
+        final ButtonGroup bg = new ButtonGroup();
+        final JRadioButton pencil = new JRadioButton(PENCIL);
+        pencil.setMnemonic(KeyEvent.VK_P);
+        final JRadioButton line = new JRadioButton(LINE);
+        line.setMnemonic(KeyEvent.VK_L);
+        final JRadioButton rectangle = new JRadioButton(REC);
+        rectangle.setMnemonic(KeyEvent.VK_R);
+        final JRadioButton ellipse = new JRadioButton(ELLIPSE);
+        ellipse.setMnemonic(KeyEvent.VK_E);
+
+        bg.add(pencil);
+        bg.add(line);
+        bg.add(rectangle);
+        bg.add(ellipse);
+
+        toolBar.add(pencil);
+        toolBar.add(line);
+        toolBar.add(rectangle);
+        toolBar.add(ellipse);
+
+        return toolBar;
+    }
+
+    /**
+     * builds the help menu.
+     * 
+     * @return the help menu.
+     */
+    public JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+        final JMenuItem about = new JMenuItem("About...");
+        about.setMnemonic(KeyEvent.VK_A);
+        about.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theArgs) {
+                JOptionPane.showMessageDialog(myJFrame,
+                                              "TCSS 305 PowerPaint, Autumn 2015",
+                                              "Sophie Nop", JOptionPane.INFORMATION_MESSAGE);
+
+            }
+
+        });
+
+        helpMenu.add(about);
+        return helpMenu;
+    }
+
+    /**
+     * builds the tool bar.
+     * 
+     * @return the tool bar.
+     */
+    public JToolBar buildToolBar() {
+        final JToolBar toolBar = new JToolBar("");
+        final ButtonGroup bg = new ButtonGroup();
+
+        final JToggleButton pencil =
+                        new JToggleButton(PENCIL, new ImageIcon("./images/pencil.gif"), true);
+        bg.add(pencil);
+
+        final JToggleButton line =
+                        new JToggleButton(LINE, new ImageIcon("./images/line_bw.gif"), false);
+        bg.add(line);
+        line.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {   
+                
+            }
+            
+        });
+        final JToggleButton rec =
+                        new JToggleButton(REC, new ImageIcon("./images/rectangle_bw.gif"),
+                                          false);
+        bg.add(rec);
+
+        final JToggleButton ellipse =
+                        new JToggleButton(ELLIPSE, new ImageIcon("./images/ellipse_bw.gif"),
+                                          false);
+        bg.add(ellipse);
+        toolBar.add(pencil);
+        toolBar.add(line);
+        toolBar.add(rec);
+        toolBar.add(ellipse);
+
+        return toolBar;
+    }
+
+}

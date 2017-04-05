@@ -1,0 +1,42 @@
+package tools;
+
+import java.awt.event.KeyEvent;
+
+import javax.swing.ImageIcon;
+
+import shapes.DrawableShape;
+import shapes.Rectangle;
+
+/**
+ * The Rectangle tool.
+ * @author Sophie
+ * @version 1
+ */
+public class RectangleTool extends AbstractPowerPaintTool {
+
+    /**
+     * The Rectangle image icon.
+     */
+    private static final ImageIcon RECTANGLE_ICON = new ImageIcon("./images/rectangle_bw.gif");
+    
+    @Override
+    public DrawableShape update(final int theNewX, final int theNewY) {
+        return new Rectangle(myStartX, myStartY, theNewX, theNewY, myColor, myStroke);
+    }
+
+    @Override
+    public String getName() {
+        return "Rectangle";
+    }
+
+    @Override
+    public int getAccelerator() {
+        return KeyEvent.VK_R;
+    }
+
+    @Override
+    public ImageIcon getIconFileName() {
+        return RECTANGLE_ICON;
+    }
+
+}

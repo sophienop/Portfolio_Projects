@@ -1,0 +1,61 @@
+package gui;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+
+import javax.swing.Icon;
+
+/**
+ * A dynamic color icon.
+ * @author Sophie
+ * @version 1
+ *
+ */
+public class ColorIcon implements Icon {
+
+    /**
+     * The height and width of this icon in pixels.
+     */
+    private static final int SIZE = 19;
+    
+    /**
+     * The color of this icon.
+     */
+    private Color myColor;
+    
+    /**
+     * Constructs a new, black ColorIcon.
+     */
+    public ColorIcon() {
+        myColor = Color.BLACK;
+    }
+    
+    /**
+     * Sets the color of this icon.
+     * @param theNewColor The new color.
+     */
+    public void setColor(final Color theNewColor) {
+        myColor = theNewColor;
+    }
+    
+    @Override
+    public int getIconHeight() {
+        return SIZE;
+    }
+
+    @Override
+    public int getIconWidth() {
+        return SIZE;
+    }
+
+    @Override
+    public void paintIcon(final Component theComponent,
+                          final Graphics theGraphics,
+                          final int theX,
+                          final int theY) {
+        theGraphics.setColor(myColor);
+        theGraphics.fillRect(theX, theY, SIZE, SIZE);
+    }
+
+}

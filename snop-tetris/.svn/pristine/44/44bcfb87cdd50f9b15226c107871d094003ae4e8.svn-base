@@ -1,0 +1,49 @@
+/*
+ * TCSS 305 – Autumn 2015 
+ * Assignment 6a – Tetris.
+ */
+
+package controller;
+
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+
+import model.Board;
+
+/**
+ * @author Sophie Nop
+ * @version 29 November 2015
+ */
+public class GameOverAction extends AbstractAction {
+    /**
+     * Generated.
+     */
+    private static final long serialVersionUID = -1283133092747263218L;
+
+    /**
+     * The game board. 
+     */
+    private final Board myBoard; 
+
+
+
+    /**
+     * Constructs the...
+     */
+    public GameOverAction(final Board theBoard) {
+        super();
+        myBoard = theBoard;
+    }
+
+    @Override
+    public void actionPerformed(final ActionEvent theEvent) {
+
+
+            final String g = "Game Over! Play Again?";
+            JOptionPane.showConfirmDialog(null, g);
+
+    }
+
+}

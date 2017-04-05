@@ -1,0 +1,429 @@
+/*
+ * TCSS 305 – Autumn 2015 
+ * Assignment 6a – Tetris.
+ */
+
+package view;
+
+import controller.AboutAction;
+import controller.TimerListener;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+
+import model.Board;
+
+/**
+ * @author Sophie Nop
+ * @version 29 November 2015
+ */
+public class TetrisGUI implements Observer {
+
+    /**
+     * The size of the blocks.
+     */
+    private static final int BLOCK_SIZE = 30;
+
+    /**
+     * The default dimension size of the game panel.
+     */
+    private static final Dimension DEFAULT_DIMENSION = new Dimension(500, 600);
+
+    /**
+     * The minimum default size of the game panel.
+     */
+    private static final Dimension TETRIS_PANEL_DEFAUL_MINIMUM_DIMENSION =
+                    new Dimension(500, 650);
+
+    /**
+     * Next piece box panel.
+     */
+    private static final int NEXT_PIECE_BOX_PANEL_WIDTH = 100;
+
+    /**
+     * Height of the score panel.
+     */
+    private static final int SCORE_PANEL_HEIGHT = 120;
+
+    /**
+     * Height of the information panel.
+     */
+    private static final int INFO_PANEL_HEIGHT = 120;
+
+    /**
+     * Padding for the box.
+     */
+    private static final int PADDING = 10;
+
+    /**
+     * The default timer.
+     */
+    private static final int DEFAULT_TIMER_SPEED = 900;
+
+     /**
+     * The board's width in blocks.
+     */
+    private static final int BOARD_WIDTH = 10;
+
+    /**
+     * The board's height in blocks.
+     */
+    private static final int BOARD_HEIGHT = 20;
+
+    /**
+     * The board game.
+     */
+    private final Board myBoard;
+
+    /**
+     * The frame.
+     */
+    private final JFrame myJFrame;
+
+    /**
+     * The Tetris Panel.
+     */
+    private final TetrisPanel myTetrisPanel;
+
+    /**
+     * The menu bar.
+     */
+    private final JMenuBar myMenuBar;
+
+    /**
+     * The panel that displays the next piece.
+     */
+    private final NextPiece myNextPiecePanel;
+
+    /**
+     * The panel that will display the score.
+     */
+    private final ScorePanel myScorePanel;
+
+    /**
+     * The panel that will display the information.
+     */
+    private final InfoPanel myInfoPanel;
+
+    /**
+     * The timer.
+     */
+    private final Timer myTimer;
+
+    /**
+     * When the game is over.
+     */
+    private boolean myGameisOver;
+
+    /**
+     * When the game is paused.
+     */
+    private boolean myGameisPaused;
+
+    /**
+     * Constructor that instantiates member fields.
+     */
+    public TetrisGUI() {
+        myJFrame = new JFrame();
+        myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+        myTetrisPanel = new TetrisPanel(myBoard);
+        myNextPiecePanel = new NextPiece(myBoard);
+        myNextPiecePanel.setBackground(Color.WHITE);
+        myInfoPanel = new InfoPanel();
+        myTimer = new Timer(DEFAULT_TIMER_SPEED, new TimerListener(myBoard));
+        myScorePanel = new ScorePanel(myBoard, myTimer, DEFAULT_TIMER_SPEED);
+        myMenuBar = new JMenuBar();
+        myBoard.addObserver(this);
+        
+        if(myBoard.isGameOver()){
+            myTimer.stop();
+          final String g = "Game Over! Play Again?";
+      JOptionPane.showConfirmDialog(null, g);     
+        }
+    }
+
+    /**
+     * Builds the frame and GUI components.
+     */
+    public void start() {
+        createFrame();
+    }
+
+    /**
+     * Creates the frame.
+     * @return the frame.
+     */
+    public JFrame createFrame() {
+        setWestPanel();
+        setEastPanel();
+
+        myJFrame.setTitle("Tetris");
+        myJFrame.setJMenuBar(buildMenu());
+        myJFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("./images/tetris.jpg"));
+        // the size of the game panel
+        myJFrame.setMinimumSize(TETRIS_PANEL_DEFAUL_MINIMUM_DIMENSION);
+        myJFrame.setSize(new Dimension(DEFAULT_DIMENSION));
+        myJFrame.setLocationRelativeTo(myJFrame);
+        myJFrame.setVisible(true);
+        // myFrame.setResizable(true);
+        myJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // myTimer.start();
+        // startMusic();
+        myJFrame.pack();
+        
+
+        myGameisPaused = false;
+        myGameisOver = false;
+        
+        final MyKeyAdapter handler = new MyKeyAdapter();
+        myJFrame.addKeyListener(handler);
+        return myJFrame;
+
+    }
+
+    /**
+     * sets up the west panel.
+     */
+    public void setWestPanel() {
+        myTetrisPanel.setBackground(Color.WHITE);
+        myTetrisPanel.setPreferredSize(new Dimension(myBoard.getWidth() * BLOCK_SIZE,
+                                                     myBoard.getHeight() * BLOCK_SIZE));
+        myJFrame.add(myTetrisPanel);
+    }
+
+    /**
+     * Sets up the east panel.
+     */
+    public void setEastPanel() {
+        //the whole east panel
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setBackground(Color.LIGHT_GRAY);
+        eastPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        final Box eastBox = new Box(BoxLayout.Y_AXIS);
+        eastBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+//        myNextPiecePanel.setBounds(x, y, width, height);
+        myNextPiecePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myNextPiecePanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH,
+                                                        NEXT_PIECE_BOX_PANEL_WIDTH));
+        final JLabel nextPieceStr = new JLabel("NEXT PIECE");
+        myNextPiecePanel.add(nextPieceStr);
+        
+        // creates padding between the panel
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        myScorePanel.setBackground(Color.WHITE);
+        myScorePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myScorePanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH * 2,
+                                                    SCORE_PANEL_HEIGHT));
+
+        eastBox.add(Box.createVerticalStrut(PADDING));
+
+        myInfoPanel.setBackground(Color.WHITE);
+        // creates a border for the panel
+        myInfoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myInfoPanel.setPreferredSize(new Dimension(NEXT_PIECE_BOX_PANEL_WIDTH * 2,
+                                                   INFO_PANEL_HEIGHT));
+
+        eastBox.add(myNextPiecePanel);
+        eastBox.add(myScorePanel);
+        eastBox.add(myInfoPanel);
+        eastPanel.add(eastBox);
+        myJFrame.add(eastPanel, BorderLayout.EAST);
+    }
+
+    /**
+     * @return the menu bar.
+     */
+    private JMenuBar buildMenu() {
+        myMenuBar.add(buildFileMenu());
+        myMenuBar.add(buildOptionMenu());
+        myMenuBar.add(buildHelpMenu());
+        return myMenuBar;
+
+    }
+
+    /**
+     * @return the option menu.
+     */
+    private JMenu buildOptionMenu() {
+        final JMenu optionMenu = new JMenu("Option");
+        final JMenuItem level = new JMenuItem("Levels");
+        final JMenuItem sound = new JMenuItem("Sound");
+        final JMenuItem color = new JMenuItem("Color");
+        optionMenu.add(level);
+        optionMenu.add(sound);
+        optionMenu.add(color);
+
+        return optionMenu;
+    }
+    
+    public void timerStopped() {
+        if (myGameisOver)
+        myTimer.stop();
+        System.out.println("my timer has stopped");
+    }
+    
+
+    @Override
+    public void update(final Observable theObject, final Object theArgs) {
+        myTetrisPanel.repaint();
+        myNextPiecePanel.repaint();
+        myScorePanel.repaint();
+        myGameisOver = myBoard.isGameOver();
+    }
+
+    /**
+     * @return the file menu.
+     */
+    private JMenu buildFileMenu() {
+        final JMenu fileMenu = new JMenu("Game");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        final JMenuItem start = new JMenuItem("Start");
+        start.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.start();
+            }
+
+        });
+        final JMenuItem newGame = new JMenuItem("New Game");
+        newGame.setMnemonic(KeyEvent.VK_N);
+        newGame.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+                myScorePanel.reset();
+                myBoard.newGame(BOARD_WIDTH, BOARD_HEIGHT, null);
+                myTimer.start();
+            }
+
+        });
+
+        final JMenuItem save = new JMenuItem("Save");
+        save.setMnemonic(KeyEvent.VK_S);
+
+        final JMenuItem pause = new JMenuItem("Pause");
+        pause.setMnemonic(KeyEvent.VK_P);
+        pause.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+            }
+
+        });
+        final JMenuItem exit = new JMenuItem("Exit");
+        exit.setMnemonic(KeyEvent.VK_X);
+        exit.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                myJFrame.dispose();
+            }
+
+        });
+
+        fileMenu.add(start);
+        fileMenu.add(newGame);
+        fileMenu.add(pause);
+        fileMenu.add(exit);
+
+        return fileMenu;
+    }
+
+    /**
+     * @return helpMenu returns the help menu.
+     */
+    private JMenu buildHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+
+        helpMenu.add(new AboutAction(myJFrame));
+        return helpMenu;
+    }
+
+    /**
+     * @author Sophie Nop
+     * @version 29 November 2015
+     */
+    public class MyKeyAdapter extends KeyAdapter {
+
+        @Override
+        public void keyPressed(final KeyEvent theEvent) {
+            if (theEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                myGameisOver = true;
+                myGameisPaused = true;
+                myTetrisPanel.repaint();
+                myTimer.stop();
+            }
+            final boolean notPaused = !myGameisPaused;
+            if (theEvent.getKeyCode() == KeyEvent.VK_P) {
+                if (myGameisPaused) {
+                    myTimer.start();
+                    myGameisPaused = notPaused;
+                } else {
+                    myTimer.stop();
+                    myGameisPaused = notPaused;
+                }
+            }
+            if (!myGameisPaused) {
+                switch (theEvent.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                        myBoard.moveLeft();
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        myBoard.moveRight();
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        myBoard.moveDown();
+                        break;
+                    case KeyEvent.VK_UP:
+                        myBoard.rotate();
+                        break;
+                    case KeyEvent.VK_SPACE:
+                        myBoard.hardDrop();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (myGameisOver && theEvent.getKeyCode() == KeyEvent.VK_N) {
+                myBoard.newGame(BOARD_WIDTH, BOARD_HEIGHT, null);
+                // myScorePanel.reset();
+                myTimer.start();
+                myGameisPaused = false;
+                // myPlayer.stop();
+                // startMusic();
+            }
+        }
+    }
+
+    
+
+}

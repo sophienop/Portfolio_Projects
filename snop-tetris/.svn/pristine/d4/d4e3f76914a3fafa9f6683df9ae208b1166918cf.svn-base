@@ -1,0 +1,135 @@
+/*
+ * TCSS 305 – Autumn 2015 Assignment 6a – tetris
+ */
+
+package view;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import controller.GameOverAction;
+import controller.TimerListener;
+import model.AbstractPiece;
+import model.Block;
+import model.Board;
+
+/**
+ * A DrawingPanel class.
+ * 
+ * @author Sophie Nop
+ * @version 28 November 2015
+ *
+ */
+public class TetrisPanel extends JPanel {
+    /**
+     * Generated.
+     */
+    private static final long serialVersionUID = 2736984037130125450L;
+
+    /**
+     * Map of colors for each piece.
+     */
+    private final Map<Block, Color> myColorMap;
+
+    /**
+     * The game board.
+     */
+    private final Board myBoard;
+    
+    private TetrisGUI myTetrisGUI;
+
+    /**
+     * Constructs the board and assign colors to the pieces.
+     * 
+     * @param theBoard that we are working on.
+     */
+    public TetrisPanel(final Board theBoard) {
+        super();
+        myBoard = theBoard;
+        myColorMap = new HashMap<Block, Color>();
+        myColorMap.put(Block.EMPTY, Color.WHITE);
+        myColorMap.put(Block.I, Color.BLUE);
+        myColorMap.put(Block.J, Color.GREEN);
+        myColorMap.put(Block.L, Color.PINK);
+        myColorMap.put(Block.O, Color.MAGENTA);
+        myColorMap.put(Block.S, Color.RED);
+        myColorMap.put(Block.T, Color.ORANGE);
+        myColorMap.put(Block.Z, Color.CYAN);
+    }
+
+    /**
+     * This method draws our graphics objects painted by the user to the screen.
+     * 
+     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+     * @param theGraphics The graphics object to use for drawing.
+     */
+    @Override
+    public void paintComponent(final Graphics theGraphics) {
+        // MAKE SURE you call the parent paintComponenet
+        super.paintComponent(theGraphics);
+        
+        // cast Graphics object to the "newer-ish" Graphics2D class.
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        // for better graphics display
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                             RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Find the width and height of a grid square for resizing
+        final int blockPixelWidth = this.getWidth() / myBoard.getWidth();
+        final int blockPixelHeight = this.getHeight() / myBoard.getHeight();
+
+        // Draw frozen pieces
+        final List<Block[]> frozenBlocks = myBoard.getFrozenBlocks();
+        // number of rows we need to pad out:
+        final int heightPadding = myBoard.getHeight() - frozenBlocks.size();
+        // pixel padding for height:
+        final int pixelHeightPad = heightPadding * blockPixelHeight;
+        for (int i = 0; i < frozenBlocks.size(); i++) {
+            final int correctedY = frozenBlocks.size() - i;
+            for (int j = 0; j < frozenBlocks.get(i).length; j++) {
+                if (frozenBlocks.get(i)[j] != Block.EMPTY) {
+                    g2d.setColor(myColorMap.get(frozenBlocks.get(i)[j]));
+                    g2d.fillRect(j * blockPixelWidth,
+                                 (correctedY - 1) * blockPixelHeight + pixelHeightPad,
+                                 blockPixelWidth, blockPixelHeight);
+                }
+            }
+        }
+
+        // draw current piece
+        // we need repeated typecasts to AbstractPiece because checkstyle is
+        // unhappy
+        // with declaring abstract type variables
+        final int[][] currentPiece =
+                        ((AbstractPiece) myBoard.getCurrentPiece()).getBoardCoordinates();
+        final Block currentBlock = ((AbstractPiece) myBoard.getCurrentPiece()).getBlock();
+        final Color currentBlockColor = myColorMap.get(currentBlock);
+        g2d.setColor(currentBlockColor);
+        for (int i = 0; i < currentPiece.length; i++) {
+            final int correctedY = myBoard.getHeight() - currentPiece[i][1];
+            g2d.fillRect(currentPiece[i][0] * blockPixelWidth, // x coordinate
+                                                               // in current
+                                                               // block
+                         correctedY * blockPixelHeight, // y coordinate in
+                                                        // current block
+                         blockPixelWidth, blockPixelHeight);
+        }
+
+//        if (myBoard.isGameOver()) {
+//            JOptionPane.showMessageDialog(myTetrisGUI.getFrame(), "Game Over! Play again?");
+//            }
+    
+        
+    }
+
+}

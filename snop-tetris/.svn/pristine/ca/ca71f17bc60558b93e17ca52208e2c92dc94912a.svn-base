@@ -1,0 +1,39 @@
+
+package controller;
+
+import java.awt.Color;
+
+
+/**
+ * Random Color maker.
+ * 
+ * @author Sophie Nop
+ * @version 6 December 2015
+ */
+public class ColorRandomizer {
+
+    /**
+     * The random color. 
+     */
+    private Color myRandomColor;
+
+    /**
+     * @param theTetrisGUI
+     * @param theBoard
+     */
+    public ColorRandomizer() {
+        myRandomColor = new Color(0, 0, 0);
+    }
+
+    /**
+     * @return the random color. 
+     */
+    public Color randomizeColors() {
+        final int r = (int) (Math.random() * 256);
+        final int g = (int) (Math.random() * 256);
+        final int b = (int) (Math.random() * 256);
+        myRandomColor = new Color(r, g, b);
+        return myRandomColor;
+    }
+
+}
